@@ -31,6 +31,13 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define CUR_FEATURE       FEATURE_UART
+#define FEATURE_TIMER     1U
+#define FEATURE_UART      2U
+
+#define TIMER_OPT_SYSTICK  1U
+
+#define UART_OPT_INTERRUPT 1U
 
 /* USER CODE END PD */
 
@@ -65,7 +72,8 @@ static void MX_TIM2_Init(void);
 char uart_buf[30];
 volatile int second_count, timer_count;
 
-#if 1 /* use systick */
+#if (CUR_FEATURE == FEATURE_TIMER)
+#if TIPER_OPT_SYSTICK  /* use systick */
 void HAL_SYSTICK_Callback(void)
 {
   if ((timer_count % 1000) == 0)
@@ -93,6 +101,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
 }
 #endif
+#endif
 /* USER CODE END 0 */
 
 /**
@@ -102,7 +111,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  char uart_buf[30];
+  int count = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -135,16 +145,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_GPIO_WritePin(GPIOB, LD2_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, LD3_Pin, GPIO_PIN_SET);
-    HAL_Delay(1000);
-#if 1 /* Toggle pin test */
-    HAL_GPIO_TogglePin(GPIOB, LD2_Pin | LD3_Pin);
+
+#if (CUR_FEATURE == FEATURE_UART)
+    memset(uart_buf, 0, 30);
+    sprintf(uart_buf, "%d\r\n", count);
+
+#if (UART_OPT_INTERRUPT)
+    HAL_UART_Transmit_IT(&huart3, uart_buf, sizeof(uart_buf));
 #else
-    HAL_GPIO_WritePin(GPIOB, LD2_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, LD3_Pin, GPIO_PIN_RESET);
+    HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 10000);  /* 10 sec */
 #endif
-    HAL_Delay(1000);
+
+    count++;
+#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
