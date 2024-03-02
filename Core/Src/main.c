@@ -35,9 +35,14 @@
 #define FEATURE_TIMER     1U
 #define FEATURE_UART      2U
 
+#define OPT_ADC_TYPE      ADC_OPT_DMA
+
 #define TIMER_OPT_SYSTICK  1U
 #define UART_OPT_INTERRUPT 1U
-#define ADC_OPT_INTERRUPT 1U
+
+#define ADC_OPT_POLLING   1U
+#define ADC_OPT_INTERRUPT 2U
+#define ADC_OPT_DMA       3U
 
 /* USER CODE END PD */
 
@@ -107,7 +112,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 #endif
 #endif
 
-#if ADC_OPT_INTERRUPT
+#if (OPT_ADC_TYPE == ADC_OPT_INTERRUPT)
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
   if (hadc->Instance == ADC1)
@@ -117,6 +122,17 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     sprintf(uart_buf, "-------> %d\r\n", adc_value);
     HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 10000);
     HAL_ADC_Start_IT(&hadc1);
+  }
+}
+#elif (OPT_ADC_TYPE == ADC_OPT_DMA)
+void HAL_ADC_ConvCpltCallback_DMA(ADC_HandleTypeDef* hadc)
+{
+  if (hadc->Instance == ADC1)
+  {
+    memset(uart_buf, 0, sizeof(uart_buf));
+    HAL_ADC_Start_DMA(&hadc1, &adc_value, 1);
+    sprintf(uart_buf, "-------> %d\r\n", adc_value);
+    HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 10000);
   }
 }
 #endif
@@ -131,8 +147,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
   char uart_buf[30];
   int count = 0;
-
-  uint32_t adc_value;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -163,8 +177,10 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);
 #endif
 
-#if ADC_OPT_INTERRUPT
+#if (OPT_ADC_TYPE == ADC_OPT_INTERRUPT)
   HAL_ADC_Start_IT(&hadc1);
+#elif (OPT_ADC_TYPE == ADC_OPT_DMA)
+  HAL_ADC_Start_DMA(&hadc1, &adc_value, 1);
 #endif
   /* USER CODE END 2 */
 
@@ -186,9 +202,7 @@ int main(void)
     count++;
 #endif
 
-#if ADC_OPT_INTERRUPT
-
-#else /* polling type */
+#if (OPT_ADC_TYPE == ADC_OPT_POLLING)
     HAL_ADC_Start(&hadc1);
     HAL_ADC_PollForConversion(&hadc1, 10);
     adc_value = HAL_ADC_GetValue(&hadc1);
