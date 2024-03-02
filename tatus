@@ -1,0 +1,32 @@
+[33mcommit c9cdd70227c76e9478919392dcfcc3dc75cef30c[m[33m ([m[1;36mHEAD -> [m[1;32musb[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmaster[m[33m)[m
+Merge: b783a61 2a078f1
+Author: dongchan55 <48978824+dongchan55@users.noreply.github.com>
+Date:   Sat Mar 2 20:20:13 2024 +0900
+
+    Merge pull request #1 from dongchan55/adc
+    
+    Add ADC
+
+[33mcommit 2a078f1c7852ced3a88d0af4d3560f1346059486[m[33m ([m[1;31morigin/adc[m[33m)[m
+Author: dongchan55 <7883655@naver.com>
+Date:   Sat Mar 2 19:51:55 2024 +0900
+
+    Add DMA type
+
+[33mcommit 52da7595923df5ce941eac927e059fe3b495ee77[m
+Author: dongchan55 <7883655@naver.com>
+Date:   Sat Mar 2 19:44:10 2024 +0900
+
+    add ADC
+
+[33mcommit b783a61573b42786fb63e9f334bf3c2506d906cb[m
+Author: dongchan55 <7883655@naver.com>
+Date:   Sat Mar 2 18:17:19 2024 +0900
+
+    uart3 test
+
+[33mcommit f7545ca2ec584c638fe52cefb4f789e2d456f382[m
+Author: dongchan55 <7883655@naver.com>
+Date:   Sat Mar 2 17:50:03 2024 +0900
+
+    initial commit(+Timer)
