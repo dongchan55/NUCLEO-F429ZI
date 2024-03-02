@@ -44,6 +44,9 @@
 #define ADC_OPT_INTERRUPT 2U
 #define ADC_OPT_DMA       3U
 
+#define MASTER_BOARD
+#define I2C_ADDRESS       0x80
+#define BUF_SIZE          30
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -53,6 +56,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+
+I2C_HandleTypeDef hi2c1;
 
 RTC_HandleTypeDef hrtc;
 
@@ -71,6 +76,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_RTC_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -79,7 +85,11 @@ static void MX_ADC1_Init(void);
 /* USER CODE BEGIN 0 */
 char uart_buf[30];
 volatile int second_count, timer_count;
+
 uint32_t adc_value;
+
+uint8_t i2c_txbuf[BUF_SIZE] = "I2C Master Data based on polling mode";
+uint8_t i2c_rxbuf[BUF_SIZE];
 
 #if (CUR_FEATURE == FEATURE_TIMER)
 #if TIPER_OPT_SYSTICK  /* use systick */
@@ -171,6 +181,7 @@ int main(void)
   MX_RTC_Init();
   MX_TIM2_Init();
   MX_ADC1_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 #if !UART_OPT_INTERRUPT
   HAL_TIM_Base_Init(&htim2);
@@ -181,6 +192,41 @@ int main(void)
   HAL_ADC_Start_IT(&hadc1);
 #elif (OPT_ADC_TYPE == ADC_OPT_DMA)
   HAL_ADC_Start_DMA(&hadc1, &adc_value, 1);
+#endif
+
+#ifdef MASTER_BOARD
+  /* Wait left user btn presssed */
+  while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_RESET)
+  {
+  }
+
+  memset(uart_buf, 0, BUF_SIZE);
+  sprintf(uart_buf, "I2C Master Transmit\r\n");
+  HAL_UART_Transmit(&haurt3, uart_buf, sizeof(uart_buf), 1000);
+
+  if (HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)I2C_ADDRESS, (uint8_t*)i2c_txbuf, BUF_SIZE, 10000) != HAL_OK)
+  {
+    memset(uart_buf, 0, BUF_SIZE);
+    sprintf(uart_buf, "I2C error %x\r\n", HAL_I2C_GetError(&hi2c1));
+    HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 1000);
+  }
+#else
+  memset(uart_buf, 0, BUF_SIZE);
+  sprintf(uart_buf, "I2C Slave Receive\r\n");
+  HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 1000);
+
+  if (HAL_I2C_Slave_Receive(&hi2c1, (uint8_t*)i2c_rxbuf, BUF_SIZE, 10000) != HAL_OK)
+  {
+    memset(uart_buf, 0, BUF_SIZE);
+    sprintf(uart_buf, "I2C error %x\r\n", HAL_I2C_GetError(&hi2c1));
+    HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 1000);
+  }
+  else
+  {
+    memset(uart_buf, 0, BUF_SIZE);
+    sprintf(uart_buf, "received data -> %s",i2c_rxbuf);
+    HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 1000);
+  }
 #endif
   /* USER CODE END 2 */
 
@@ -324,6 +370,54 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
 
 }
 
