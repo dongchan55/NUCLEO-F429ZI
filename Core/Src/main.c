@@ -31,18 +31,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CUR_FEATURE       FEATURE_UART
-#define FEATURE_TIMER     1U
-#define FEATURE_UART      2U
-
-#define OPT_ADC_TYPE      ADC_OPT_DMA
-
-#define TIMER_OPT_SYSTICK  1U
-#define UART_OPT_INTERRUPT 1U
-
-#define ADC_OPT_POLLING   1U
-#define ADC_OPT_INTERRUPT 2U
-#define ADC_OPT_DMA       3U
 
 /* USER CODE END PD */
 
@@ -52,11 +40,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
-
 RTC_HandleTypeDef hrtc;
-
-TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart3;
 
@@ -69,73 +53,60 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_RTC_Init(void);
-static void MX_TIM2_Init(void);
-static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-char uart_buf[30];
-volatile int second_count, timer_count;
-uint32_t adc_value;
 
-#if (CUR_FEATURE == FEATURE_TIMER)
-#if TIPER_OPT_SYSTICK  /* use systick */
-void HAL_SYSTICK_Callback(void)
-{
-  if ((timer_count % 1000) == 0)
-  {
-    memset(uart_buf, 0, 30);
-    sprintf(uart_buf, "%d,%d\r\n", second_count, timer_count);
-    HAL_UART_Transmit_IT(&huart3, uart_buf, sizeof(uart_buf));
-    second_count++;
-  }
-  timer_count++;
-}
-#else /* use timer2(10ms) */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  if (htim->Instance == TIM2)
-  {
-    if ((timer_count % 100) == 0)
-    {
-      memset(uart_buf, 0, 30);
-      sprintf(uart_buf, "%d,%d\r\n", second_count, timer_count);
-      HAL_UART_Transmit_IT(&huart3, uart_buf, sizeof(uart_buf));
-      second_count++;
-    }
-    timer_count++;
-  }
-}
-#endif
-#endif
+#define UART_BUF_LEN     30
 
-#if (OPT_ADC_TYPE == ADC_OPT_INTERRUPT)
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-{
-  if (hadc->Instance == ADC1)
-  {
-    memset(uart_buf, 0, sizeof(uart_buf));
-    adc_value = HAL_ADC_GetValue(&hadc1);
-    sprintf(uart_buf, "-------> %d\r\n", adc_value);
-    HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 10000);
-    HAL_ADC_Start_IT(&hadc1);
-  }
-}
-#elif (OPT_ADC_TYPE == ADC_OPT_DMA)
-void HAL_ADC_ConvCpltCallback_DMA(ADC_HandleTypeDef* hadc)
-{
-  if (hadc->Instance == ADC1)
-  {
-    memset(uart_buf, 0, sizeof(uart_buf));
-    HAL_ADC_Start_DMA(&hadc1, &adc_value, 1);
-    sprintf(uart_buf, "-------> %d\r\n", adc_value);
-    HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 10000);
-  }
-}
-#endif
+/* Base address of the Flash sectors Bank 1 */
+#define ADDR_FLASH_SECTOR_0      ((uint32_t)0x08000000) /* Base @ of Sector 0, 16 Kbytes */
+#define ADDR_FLASH_SECTOR_1      ((uint32_t)0x08004000) /* Base @ of Sector 1, 16 Kbytes */
+#define ADDR_FLASH_SECTOR_2      ((uint32_t)0x08008000) /* Base @ of Sector 2, 16 Kbytes */
+#define ADDR_FLASH_SECTOR_3      ((uint32_t)0x0800C000) /* Base @ of Sector 3, 16 Kbytes */
+#define ADDR_FLASH_SECTOR_4      ((uint32_t)0x08010000) /* Base @ of Sector 4, 64 Kbytes */
+#define ADDR_FLASH_SECTOR_5      ((uint32_t)0x08020000) /* Base @ of Sector 5, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_6      ((uint32_t)0x08040000) /* Base @ of Sector 6, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_7      ((uint32_t)0x08060000) /* Base @ of Sector 7, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_8      ((uint32_t)0x08080000) /* Base @ of Sector 8, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_9      ((uint32_t)0x080A0000) /* Base @ of Sector 9, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_10     ((uint32_t)0x080C0000) /* Base @ of Sector 10, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_11     ((uint32_t)0x080E0000) /* Base @ of Sector 11, 128 Kbytes */
+
+
+/* Base address of the Flash sectors Bank 2 */
+#define ADDR_FLASH_SECTOR_12     ((uint32_t)0x08100000) /* Base @ of Sector 0, 16 Kbytes */
+#define ADDR_FLASH_SECTOR_13     ((uint32_t)0x08104000) /* Base @ of Sector 1, 16 Kbytes */
+#define ADDR_FLASH_SECTOR_14     ((uint32_t)0x08108000) /* Base @ of Sector 2, 16 Kbytes */
+#define ADDR_FLASH_SECTOR_15     ((uint32_t)0x0810C000) /* Base @ of Sector 3, 16 Kbytes */
+#define ADDR_FLASH_SECTOR_16     ((uint32_t)0x08110000) /* Base @ of Sector 4, 64 Kbytes */
+#define ADDR_FLASH_SECTOR_17     ((uint32_t)0x08120000) /* Base @ of Sector 5, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_18     ((uint32_t)0x08140000) /* Base @ of Sector 6, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_19     ((uint32_t)0x08160000) /* Base @ of Sector 7, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_20     ((uint32_t)0x08180000) /* Base @ of Sector 8, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_21     ((uint32_t)0x081A0000) /* Base @ of Sector 9, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_22     ((uint32_t)0x081C0000) /* Base @ of Sector 10, 128 Kbytes */
+#define ADDR_FLASH_SECTOR_23     ((uint32_t)0x081E0000) /* Base @ of Sector 11, 128 Kbytes */
+
+
+#define FLASH_USER_START_ADDR   ADDR_FLASH_SECTOR_3  /* Start @ of user Flash area */
+#define FLASH_USER_END_ADDR     ADDR_FLASH_SECTOR_23 + GetSectorSize(ADDR_FLASH_SECTOR_23) - 1 /* End @ of user Flash area */
+
+#define DATA_32                 ((uint32_t)0x12345678)
+
+uint32_t FirstSector = 0, NbOfSectors = 0;
+uint32_t Address = 0, SECTORError = 0;
+__IO uint32_t data32 = 0, MemoryProgramStatus = 0;
+
+char uart_buf[UART_BUF_LEN];
+
+static FLASH_EraseInitTypeDef EraseInitStruct;
+
+static uint32_t GetSector(uint32_t Address);
+static uint32_t GetSectorSize(uint32_t Sector);
 /* USER CODE END 0 */
 
 /**
@@ -145,8 +116,6 @@ void HAL_ADC_ConvCpltCallback_DMA(ADC_HandleTypeDef* hadc)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  char uart_buf[30];
-  int count = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -169,50 +138,78 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-  MX_TIM2_Init();
-  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-#if !UART_OPT_INTERRUPT
-  HAL_TIM_Base_Init(&htim2);
-  HAL_TIM_Base_Start_IT(&htim2);
-#endif
 
-#if (OPT_ADC_TYPE == ADC_OPT_INTERRUPT)
-  HAL_ADC_Start_IT(&hadc1);
-#elif (OPT_ADC_TYPE == ADC_OPT_DMA)
-  HAL_ADC_Start_DMA(&hadc1, &adc_value, 1);
-#endif
+  HAL_FLASH_Unlock();
+
+  /* Get the 1st sector to erase */
+  FirstSector = GetSector(FLASH_USER_START_ADDR);
+  /* Get the number of sector to erase from 1st sector */
+  NbOfSectors = GetSector(FLASH_USER_END_ADDR) - FirstSector + 1;
+  /* Fill EraseInit structure */
+  EraseInitStruct.TypeErase    = FLASH_TYPEERASE_SECTORS;
+  EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+  EraseInitStruct.Sector       = FirstSector;
+  EraseInitStruct.NbSectors    = NbOfSectors;
+
+  if (HAL_FLASHEx_Erase(&EraseInitStruct, &SECTORError) != HAL_OK)
+  {
+    memset(uart_buf, 0, UART_BUF_LEN);
+    sprintf(uart_buf, "HAL_FLASHEx_Erase ERROR \r\n");
+    HAL_UART_Transmit_IT(&huart3, uart_buf, UART_BUF_LEN);
+    return -1;
+  }
+
+  Address = FLASH_USER_START_ADDR;
+
+  while (Address < FLASH_USER_END_ADDR)
+  {
+    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Address, DATA_32) == HAL_OK)
+    {
+      Address += 4;
+    }
+    else
+    {
+      memset(uart_buf, 0, UART_BUF_LEN);
+      sprintf(uart_buf, "HAL FLASH Program ERROR\r\n");
+      HAL_UART_Transmit_IT(&huart3, uart_buf, UART_BUF_LEN);
+      return -1;
+    }
+  }
+
+  HAL_FLASH_Lock();
+
+  Address = FLASH_USER_START_ADDR;
+  MemoryProgramStatus = 0;
+
+  while (Address < FLASH_USER_END_ADDR)
+  {
+    data32 = *(__IO uint32_t *)Address;
+
+    if (data32 != DATA_32)
+    {
+      MemoryProgramStatus++;
+    }
+    Address += 4;
+  }
+
+  memset(uart_buf, 0, UART_BUF_LEN);
+
+  if (MemoryProgramStatus == 0)
+  {
+    sprintf(uart_buf, "No error detected\r\n");
+  }
+  else
+  {
+    sprintf(uart_buf, "error detected\r\n");
+  }
+  HAL_UART_Transmit_IT(&huart3, uart_buf, UART_BUF_LEN);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-#if (CUR_FEATURE == FEATURE_UART)
-    memset(uart_buf, 0, 30);
-    sprintf(uart_buf, "%d\r\n", count);
-
-#if (UART_OPT_INTERRUPT)
-    HAL_UART_Transmit_IT(&huart3, uart_buf, sizeof(uart_buf));
-#else
-    HAL_UART_Transmit(&huart3, uart_buf, sizeof(uart_buf), 10000);  /* 10 sec */
-#endif
-
-    count++;
-#endif
-
-#if (OPT_ADC_TYPE == ADC_OPT_POLLING)
-    HAL_ADC_Start(&hadc1);
-    HAL_ADC_PollForConversion(&hadc1, 10);
-    adc_value = HAL_ADC_GetValue(&hadc1);
-    HAL_ADC_Stop(&hadc1);
-
-    memset(uart_buf, 0, sizeof(uart_buff));
-    sprintf(uart_buf, "-->%d\r\n", adc_value);
-    HAL_UART_Transmit_IT(&huart3, uart_buf, sizeof(uart_buf));
-#endif
-
     HAL_Delay(1000);
     /* USER CODE END WHILE */
 
@@ -276,58 +273,6 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
-  */
-  sConfig.Channel = ADC_CHANNEL_3;
-  sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
-}
-
-/**
   * @brief RTC Initialization Function
   * @param None
   * @retval None
@@ -359,51 +304,6 @@ static void MX_RTC_Init(void)
   /* USER CODE BEGIN RTC_Init 2 */
 
   /* USER CODE END RTC_Init 2 */
-
-}
-
-/**
-  * @brief TIM2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM2_Init(void)
-{
-
-  /* USER CODE BEGIN TIM2_Init 0 */
-
-  /* USER CODE END TIM2_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  /* USER CODE BEGIN TIM2_Init 1 */
-
-  /* USER CODE END TIM2_Init 1 */
-  htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 1000;
-  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 900;
-  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM2_Init 2 */
-
-  /* USER CODE END TIM2_Init 2 */
 
 }
 
@@ -542,7 +442,117 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static uint32_t GetSector(uint32_t Address)
+{
+  uint32_t SectorIdx = 0;
+  if (Address < ADDR_FLASH_SECTOR_0)
+  {
+    SectorIdx = 0;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_1)
+  {
+    SectorIdx = 0;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_2)
+  {
+    SectorIdx = 1;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_3)
+  {
+    SectorIdx = 2;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_4)
+  {
+    SectorIdx = 3;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_5)
+  {
+    SectorIdx = 4;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_6)
+  {
+    SectorIdx = 5;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_7)
+  {
+    SectorIdx = 6;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_8)
+  {
+    SectorIdx = 7;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_9)
+  {
+    SectorIdx = 8;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_10)
+  {
+    SectorIdx = 9;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_11)
+  {
+    SectorIdx = 10;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_12)
+  {
+    SectorIdx = 11;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_13)
+  {
+    SectorIdx = 12;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_14)
+  {
+    SectorIdx = 13;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_15)
+  {
+    SectorIdx = 14;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_16)
+  {
+    SectorIdx = 15;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_17)
+  {
+    SectorIdx = 16;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_18)
+  {
+    SectorIdx = 17;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_19)
+  {
+    SectorIdx = 18;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_20)
+  {
+    SectorIdx = 19;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_21)
+  {
+    SectorIdx = 20;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_22)
+  {
+    SectorIdx = 21;
+  }
+  else if (Address < ADDR_FLASH_SECTOR_23)
+  {
+    SectorIdx = 22;
+  }
+  else
+  {
+    SectorIdx = 23;
+  }
+  return SectorIdx;
+}
 
+static uint32_t GetSectorSize(uint32_t Sector)
+{
+  uint32_t SectorSize = 0;
+  return SectorSize;
+}
 /* USER CODE END 4 */
 
 /**
